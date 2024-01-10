@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
                 itemClick = object : ItemClick {
                     override fun onClick(view: View, position: Int) {
                         Log.d(TAG, "onClick) position: $position")
+
+                        startActivity(DetailActivity.newIntent(context, dataSet[position]))
                     }
                 }
             }

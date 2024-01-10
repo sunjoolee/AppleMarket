@@ -36,7 +36,7 @@ class MyAdapter(private val dataSet: Array<Post>) : RecyclerView.Adapter<MyAdapt
 
                 titleTextView.text = title
                 locationTextView.text = location
-                priceTextView.text = price.toString()
+                priceTextView.text = price.toString() + "원"
 
                 commentsTextView.text = commentCnt.toString()
                 heartsTextView.text = heartCnt.toString()
