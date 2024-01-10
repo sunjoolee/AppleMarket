@@ -3,4 +3,11 @@
 
     <string name="manner_temp"><u>매너온도</u></string>
     <string name="begin_chat">채팅하기</string>
+    
+    <string name="end_dialog_title">종료</string>
+    <string name="end_dialog_msg">정말 종료하시겠습니까?</string>
+    <string name="delete_dialog_title">항목 삭제</string>
+    <string name="delete_dialog_msg">선택한 항목을 삭제하시겠습니까?\n(%s)</string>
+    <string name="dialog_positive">확인</string>
+    <string name="dialog_negative">취소</string>
 </resources>

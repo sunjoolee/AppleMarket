@@ -7,12 +7,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.sunjoolee.sparta_applemarket.databinding.RecyclerViewItemBinding
+import java.text.DecimalFormat
 
 interface ItemClick{
     fun onClick(view:View, position:Int)
+    fun onLongClick(view:View, position:Int)
 }
 
-class MyAdapter(private val dataSet: Array<Post>) : RecyclerView.Adapter<MyAdapter.MyHolder>() {
+class MyAdapter(private val dataSet: MutableList<Post>) : RecyclerView.Adapter<MyAdapter.MyHolder>() {
 
     var itemClick:ItemClick? = null
 
@@ -27,7 +29,11 @@ class MyAdapter(private val dataSet: Array<Post>) : RecyclerView.Adapter<MyAdapt
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
         holder.apply {
             itemView.setOnClickListener {
-                itemClick?.onClick(it, position)
+                itemClick?.onClick(it, adapterPosition)
+            }
+            itemView.setOnLongClickListener {
+                itemClick?.onLongClick(it, adapterPosition)
+                false
             }
 
             with(dataSet[position]) {
@@ -36,7 +42,7 @@ class MyAdapter(private val dataSet: Array<Post>) : RecyclerView.Adapter<MyAdapt
 
                 titleTextView.text = title
                 locationTextView.text = location
-                priceTextView.text = price.toString() + "원"
+                priceTextView.text = DecimalFormat("#,###").format(price).toString() + "원"
 
                 commentsTextView.text = commentCnt.toString()
                 heartsTextView.text = heartCnt.toString()

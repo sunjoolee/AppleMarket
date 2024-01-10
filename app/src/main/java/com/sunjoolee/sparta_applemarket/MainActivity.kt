@@ -1,9 +1,11 @@
 package com.sunjoolee.sparta_applemarket
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,41 +16,90 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var dataSet:MutableList<Post>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val dataSet = getDummyData()
+        dataSet = getDummyData()
         initRecyclerView(dataSet)
     }
 
-    private fun initRecyclerView(dataSet: Array<Post>) {
+
+    private fun initRecyclerView(dataSet: MutableList<Post>) {
         binding.mainRecyclerView.apply {
             //set LayoutManager
             layoutManager = LinearLayoutManager(context)
 
             //set adapter
             adapter = MyAdapter(dataSet).apply {
-                //set adapter onClick callback
+                //set adapter itemClick
                 itemClick = object : ItemClick {
                     override fun onClick(view: View, position: Int) {
-                        Log.d(TAG, "onClick) position: $position")
-
-                        startActivity(DetailActivity.newIntent(context, dataSet[position]))
+                        Log.d(TAG, "onClick) position: $position, title: ${dataSet[position].title}")
+                        startActivity(DetailActivity.newIntent(context,dataSet[position]))
+                    }
+                    override fun onLongClick(view: View, position: Int) {
+                        Log.d(TAG, "onLongClick) position: $position")
+                        showDeleteDialog(position)
                     }
                 }
             }
-
             //set divider item decoration
             addItemDecoration(
                 DividerItemDecoration(context, LinearLayout.VERTICAL)
             )
         }
     }
+    private fun showDeleteDialog(position:Int){
+        val builder = AlertDialog.Builder(this).apply {
+            setTitle(R.string.delete_dialog_title)
+            setMessage(resources.getString(R.string.delete_dialog_msg,dataSet[position].title))
+            setIcon(R.drawable.icon_dialog)
+        }
+        val listener = DialogInterface.OnClickListener { _, p1 ->
+            when (p1) {
+                DialogInterface.BUTTON_POSITIVE -> deleteRecyclerViewItem(position)
+                DialogInterface.BUTTON_NEGATIVE -> {} //아무 동작 X
+            }
+        }
+        builder.setPositiveButton(R.string.dialog_positive, listener)
+        builder.setNegativeButton(R.string.dialog_negative, listener)
+        builder.show()
+    }
+    private fun deleteRecyclerViewItem(position:Int){
+        //선택한 항목 삭제
+        dataSet.removeAt(position)
+        //항목 삭제 observer에 알리기
+        binding.mainRecyclerView.adapter?.notifyItemRemoved(position)
+    }
+    override fun onBackPressed() {
+        Log.d(TAG, "back button pressed")
+        showExitDialog()
+    }
+    private fun showExitDialog(){
+        val builder = AlertDialog.Builder(this).apply {
+            setTitle(R.string.end_dialog_title)
+            setMessage(R.string.end_dialog_msg)
+            setIcon(R.drawable.icon_dialog)
+        }
+        val listener = DialogInterface.OnClickListener { _, p1 ->
+            when (p1) {
+                DialogInterface.BUTTON_POSITIVE ->  exit()
+                DialogInterface.BUTTON_NEGATIVE -> {} //아무 동작 X
+            }
+        }
+        builder.setPositiveButton(R.string.dialog_positive, listener)
+        builder.setNegativeButton(R.string.dialog_negative, listener)
+        builder.show()
+    }
+    private fun exit(){
+        super.onBackPressed() //앱 종료
+    }
 
-    private fun getDummyData(): Array<Post> {
-        var dummyDataSet = arrayOf<Post>(
+    private fun getDummyData(): MutableList<Post> {
+        var dummyDataSet = mutableListOf<Post>(
             Post(
                 1,
                 R.drawable.sample1,

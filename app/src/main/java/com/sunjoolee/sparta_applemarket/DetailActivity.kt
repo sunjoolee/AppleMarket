@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.sunjoolee.sparta_applemarket.databinding.ActivityDetailBinding
+import java.text.DecimalFormat
 
 class DetailActivity : AppCompatActivity() {
     private val TAG = "DetailActivity"
@@ -43,7 +44,7 @@ class DetailActivity : AppCompatActivity() {
                 detailTvLoction.text = location
                 detailTvTitle.text = title
                 detailTvBody.text = body
-                detailTvPrice.text = price.toString() + "원"
+                detailTvPrice.text = DecimalFormat("#,###").format(price).toString() + "원"
             }
         }
     }
