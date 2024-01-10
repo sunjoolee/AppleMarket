@@ -7,40 +7,42 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.sunjoolee.sparta_applemarket.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
 
-    private val recyclerView: RecyclerView by lazy { findViewById(R.id.main_recycler_view) }
+    private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val dataSet = getDummyData()
         initRecyclerView(dataSet)
     }
 
-    private fun initRecyclerView(dataSet : Array<Post>){
-        //set LayoutManager
-        recyclerView.layoutManager = LinearLayoutManager(this)
+    private fun initRecyclerView(dataSet: Array<Post>) {
+        binding.mainRecyclerView.apply {
+            //set LayoutManager
+            layoutManager = LinearLayoutManager(context)
 
-        //set adapter
-        recyclerView.adapter = MyAdapter(dataSet).apply {
-            //set adapter onClick callback
-            itemClick = object : ItemClick {
-                override fun onClick(view: View, position: Int) {
-                    Log.d(TAG, "onClick) position: $position")
+            //set adapter
+            adapter = MyAdapter(dataSet).apply {
+                //set adapter onClick callback
+                itemClick = object : ItemClick {
+                    override fun onClick(view: View, position: Int) {
+                        Log.d(TAG, "onClick) position: $position")
+                    }
                 }
             }
+
+            //set divider item decoration
+            addItemDecoration(
+                DividerItemDecoration(context, LinearLayout.VERTICAL)
+            )
         }
-
-        //set divider item decoration
-        recyclerView.addItemDecoration(
-            DividerItemDecoration(recyclerView.context, LinearLayout.VERTICAL)
-        )
-
     }
 
     private fun getDummyData(): Array<Post> {
