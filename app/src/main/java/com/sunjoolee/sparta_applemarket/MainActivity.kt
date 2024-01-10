@@ -25,19 +25,45 @@ class MainActivity : AppCompatActivity() {
         initRecyclerView(dataSet)
     }
 
-    private fun initRecyclerView(dataSet: Array<Post>) {
+
+    private fun initRecyclerView(dataSet: MutableList<Post>) {
         binding.mainRecyclerView.apply {
             //set LayoutManager
             layoutManager = LinearLayoutManager(context)
 
             //set adapter
             adapter = MyAdapter(dataSet).apply {
-                //set adapter onClick callback
+                //set adapter itemClick
                 itemClick = object : ItemClick {
                     override fun onClick(view: View, position: Int) {
-                        Log.d(TAG, "onClick) position: $position")
+                        Log.d(TAG, "onClick) position: $position, title: ${dataSet[position].title}")
+                        startActivity(DetailActivity.newIntent(context,dataSet[position]))
+                    }
 
-                        startActivity(DetailActivity.newIntent(context, dataSet[position]))
+                    override fun onLongClick(view: View, position: Int) {
+                        Log.d(TAG, "onLongClick) position: $position")
+
+                        val builder = AlertDialog.Builder(context).apply {
+                            setTitle(R.string.delete_dialog_title)
+                            setMessage(resources.getString(R.string.delete_dialog_msg,dataSet[position].title))
+                            setIcon(R.drawable.icon_dialog)
+                        }
+                        val listener = DialogInterface.OnClickListener { _, p1 ->
+                            when (p1) {
+                                DialogInterface.BUTTON_POSITIVE -> {
+                                    //선택한 항목 삭제
+                                    dataSet.removeAt(position)
+                                    //항목 삭제 observer에 알리기
+                                    notifyItemRemoved(position)
+                                }
+                                DialogInterface.BUTTON_NEGATIVE -> {
+                                    //아무 동작 X
+                                }
+                            }
+                        }
+                        builder.setPositiveButton(R.string.dialog_positive, listener)
+                        builder.setNegativeButton(R.string.dialog_negative, listener)
+                        builder.show()
                     }
                 }
             }
@@ -55,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this).apply {
             setTitle(R.string.end_dialog_title)
             setMessage(R.string.end_dialog_msg)
-            setIcon(R.drawable.icon_end_dialog)
+            setIcon(R.drawable.icon_dialog)
         }
         val listener = DialogInterface.OnClickListener { _, p1 ->
             when (p1) {
@@ -63,13 +89,13 @@ class MainActivity : AppCompatActivity() {
                 DialogInterface.BUTTON_NEGATIVE -> {} //아무 동작 X
             }
         }
-        builder.setPositiveButton(R.string.end_dialog_positive, listener)
-        builder.setNegativeButton(R.string.end_dialog_negative, listener)
+        builder.setPositiveButton(R.string.dialog_positive, listener)
+        builder.setNegativeButton(R.string.dialog_negative, listener)
         builder.show()
     }
 
-    private fun getDummyData(): Array<Post> {
-        var dummyDataSet = arrayOf<Post>(
+    private fun getDummyData(): MutableList<Post> {
+        var dummyDataSet = mutableListOf<Post>(
             Post(
                 1,
                 R.drawable.sample1,

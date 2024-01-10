@@ -11,9 +11,10 @@ import java.text.DecimalFormat
 
 interface ItemClick{
     fun onClick(view:View, position:Int)
+    fun onLongClick(view:View, position:Int)
 }
 
-class MyAdapter(private val dataSet: Array<Post>) : RecyclerView.Adapter<MyAdapter.MyHolder>() {
+class MyAdapter(private val dataSet: MutableList<Post>) : RecyclerView.Adapter<MyAdapter.MyHolder>() {
 
     var itemClick:ItemClick? = null
 
@@ -28,7 +29,11 @@ class MyAdapter(private val dataSet: Array<Post>) : RecyclerView.Adapter<MyAdapt
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
         holder.apply {
             itemView.setOnClickListener {
-                itemClick?.onClick(it, position)
+                itemClick?.onClick(it, adapterPosition)
+            }
+            itemView.setOnLongClickListener {
+                itemClick?.onLongClick(it, adapterPosition)
+                false
             }
 
             with(dataSet[position]) {
