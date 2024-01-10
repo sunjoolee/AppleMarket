@@ -1,9 +1,11 @@
 package com.sunjoolee.sparta_applemarket
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -45,6 +47,25 @@ class MainActivity : AppCompatActivity() {
                 DividerItemDecoration(context, LinearLayout.VERTICAL)
             )
         }
+    }
+
+    override fun onBackPressed() {
+        Log.d(TAG, "back button pressed")
+
+        val builder = AlertDialog.Builder(this).apply {
+            setTitle(R.string.end_dialog_title)
+            setMessage(R.string.end_dialog_msg)
+            setIcon(R.drawable.icon_end_dialog)
+        }
+        val listener = DialogInterface.OnClickListener { _, p1 ->
+            when (p1) {
+                DialogInterface.BUTTON_POSITIVE ->  super.onBackPressed() //앱 종료
+                DialogInterface.BUTTON_NEGATIVE -> {} //아무 동작 X
+            }
+        }
+        builder.setPositiveButton(R.string.end_dialog_positive, listener)
+        builder.setNegativeButton(R.string.end_dialog_negative, listener)
+        builder.show()
     }
 
     private fun getDummyData(): Array<Post> {
