@@ -1,12 +1,24 @@
 package com.sunjoolee.sparta_applemarket
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.DialogInterface
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.media.AudioAttributes
+import android.media.RingtoneManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sunjoolee.sparta_applemarket.databinding.ActivityMainBinding
@@ -16,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var dataSet:MutableList<Post>
+    private lateinit var dataSet: MutableList<Post>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -24,6 +36,8 @@ class MainActivity : AppCompatActivity() {
 
         dataSet = getDummyData()
         initRecyclerView(dataSet)
+
+        initAlarmButton()
     }
 
 
@@ -37,9 +51,13 @@ class MainActivity : AppCompatActivity() {
                 //set adapter itemClick
                 itemClick = object : ItemClick {
                     override fun onClick(view: View, position: Int) {
-                        Log.d(TAG, "onClick) position: $position, title: ${dataSet[position].title}")
-                        startActivity(DetailActivity.newIntent(context,dataSet[position]))
+                        Log.d(
+                            TAG,
+                            "onClick) position: $position, title: ${dataSet[position].title}"
+                        )
+                        startActivity(DetailActivity.newIntent(context, dataSet[position]))
                     }
+
                     override fun onLongClick(view: View, position: Int) {
                         Log.d(TAG, "onLongClick) position: $position")
                         showDeleteDialog(position)
@@ -52,10 +70,11 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
-    private fun showDeleteDialog(position:Int){
+
+    private fun showDeleteDialog(position: Int) {
         val builder = AlertDialog.Builder(this).apply {
             setTitle(R.string.delete_dialog_title)
-            setMessage(resources.getString(R.string.delete_dialog_msg,dataSet[position].title))
+            setMessage(resources.getString(R.string.delete_dialog_msg, dataSet[position].title))
             setIcon(R.drawable.icon_dialog)
         }
         val listener = DialogInterface.OnClickListener { _, p1 ->
@@ -68,17 +87,20 @@ class MainActivity : AppCompatActivity() {
         builder.setNegativeButton(R.string.dialog_negative, listener)
         builder.show()
     }
-    private fun deleteRecyclerViewItem(position:Int){
+
+    private fun deleteRecyclerViewItem(position: Int) {
         //선택한 항목 삭제
         dataSet.removeAt(position)
         //항목 삭제 observer에 알리기
         binding.mainRecyclerView.adapter?.notifyItemRemoved(position)
     }
+
     override fun onBackPressed() {
         Log.d(TAG, "back button pressed")
         showExitDialog()
     }
-    private fun showExitDialog(){
+
+    private fun showExitDialog() {
         val builder = AlertDialog.Builder(this).apply {
             setTitle(R.string.end_dialog_title)
             setMessage(R.string.end_dialog_msg)
@@ -86,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         }
         val listener = DialogInterface.OnClickListener { _, p1 ->
             when (p1) {
-                DialogInterface.BUTTON_POSITIVE ->  exit()
+                DialogInterface.BUTTON_POSITIVE -> exit()
                 DialogInterface.BUTTON_NEGATIVE -> {} //아무 동작 X
             }
         }
@@ -94,8 +116,84 @@ class MainActivity : AppCompatActivity() {
         builder.setNegativeButton(R.string.dialog_negative, listener)
         builder.show()
     }
-    private fun exit(){
+
+    private fun exit() {
         super.onBackPressed() //앱 종료
+    }
+
+    private fun initAlarmButton() {
+        binding.mainIvAlarm.setOnClickListener {
+            Log.d(TAG, "alarm button clicked")
+            showAlarm()
+        }
+    }
+
+    private fun showAlarm() {
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val builder: NotificationCompat.Builder
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d(TAG, "build version >= 26")
+            // 26 버전 이상
+            val channelId = "keyword-channel"
+            val channel = NotificationChannel(
+                channelId,
+                resources.getText(R.string.alarm_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = resources.getText(R.string.alarm_channel_description).toString()
+                setShowBadge(true)
+                val uri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                val audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build()
+                setSound(uri, audioAttributes)
+                enableVibration(true)
+            }
+            // 채널을 NotificationManager에 등록
+            manager.createNotificationChannel(channel)
+            // 채널을 이용하여 builder 생성
+            builder = NotificationCompat.Builder(this, channelId)
+        } else {
+            // 26 버전 이하
+            Log.d(TAG, "build version < 26")
+            builder = NotificationCompat.Builder(this)
+        }
+
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        // 알림의 기본 정보
+        builder.run {
+            setSmallIcon(R.drawable.icon_alarm)
+            setWhen(System.currentTimeMillis())
+            setContentTitle(resources.getText(R.string.alarm_title))
+            setContentText(resources.getText(R.string.alarm_text))
+            addAction(R.mipmap.ic_launcher, "Action", pendingIntent)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Log.d(TAG, "build version >= TIRAMISU")
+            if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+                // 알림 권한이 없다면, 사용자에게 권한 요청
+                getNotificationPermission()
+            }
+        }
+        Log.d(TAG, "notify alarm")
+        manager.notify(11, builder.build())
+    }
+    private fun getNotificationPermission(){
+        Log.d(TAG, "get notification permssion")
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+        }
+        startActivity(intent)
     }
 
     private fun getDummyData(): MutableList<Post> {
